@@ -25,6 +25,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.example.tp3_bluetooth_low_energy.adapter.DeviceAdapter
 import com.example.tp3_bluetooth_low_energy.databinding.ActivityDeviceScanBinding
 
 class DeviceScanActivity : AppCompatActivity() {
@@ -32,6 +33,7 @@ class DeviceScanActivity : AppCompatActivity() {
      * TODO: private lateinit var binding : ...
      */
     private lateinit var binding: ActivityDeviceScanBinding
+    private lateinit var recyclerAdapter: DeviceAdapter
     /**
      * Méthode appelée à la création de l'activité
      */
@@ -42,6 +44,22 @@ class DeviceScanActivity : AppCompatActivity() {
          */
         binding = ActivityDeviceScanBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Initialisation de l'affichage du RecyclerView
+        recyclerAdapter = DeviceAdapter(
+            bleDevicesFoundList = bleDevicesFoundList,
+            onDeviceClickedDA = { device -> this.onDeviceClicked(device) }
+        )
+
+        // Initialisation de l'affichage du RecyclerView
+        binding.recyclerView.adapter = recyclerAdapter
+    }
+
+    // Méthode appelée lorsque l'utilisateur clique sur un périphérique/device
+    fun onDeviceClicked(device: BluetoothDevice) {
+        val intent = Intent(this, SupervisorActivity::class.java)
+        intent.putExtra("device", device)
+        this.startActivity(intent)
     }
 
     /**
