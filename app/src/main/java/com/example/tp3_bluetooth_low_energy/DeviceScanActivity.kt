@@ -21,14 +21,17 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.example.tp3_bluetooth_low_energy.databinding.ActivityDeviceScanBinding
 
 class DeviceScanActivity : AppCompatActivity() {
     /*
      * TODO: private lateinit var binding : ...
      */
+    private lateinit var binding: ActivityDeviceScanBinding
     /**
      * Méthode appelée à la création de l'activité
      */
@@ -37,6 +40,8 @@ class DeviceScanActivity : AppCompatActivity() {
         /*
          * TODO: Utiliser le view binding pour lier l'activité à un layout
          */
+        binding = ActivityDeviceScanBinding.inflate(layoutInflater)
+        setContentView(binding.root)
     }
 
     /**
@@ -180,6 +185,11 @@ class DeviceScanActivity : AppCompatActivity() {
      * La méthode « registerForActivityResult » permet de gérer le résultat d'une activité.
      * Ce code est appelé à chaque fois que l'utilisateur répond à la demande d'activation du Bluetooth (visible ou non)
      */
+    /*
+    5/ Si l'utilisateur refuse d'activer le Bluetooth, une nouvelle fenêtre apparaît pour lui demander à nouveau car
+    l'application a besoin d'utiliser le Bluetooth pour fonctionner correctement.
+    Cependant, il est important de ne pas boucler sur une demande d'activation du Bluetooth si l'utilisateur refuse.
+     */
     val registerForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) {
             // L'utilisateur a accepté, le Bluetooth est activé, on lance le scan
@@ -192,7 +202,6 @@ class DeviceScanActivity : AppCompatActivity() {
             val message = "Vous devez activer le Bluetooth pour utiliser cette application. Veuillez quitter l'application et réessayer en activant le Bluetooth."
             binding.messageTextView.text = message
             binding.messageTextView.visibility = View.VISIBLE
-            binding.scanButton.visibility = View.GONE
         }
     }
 
