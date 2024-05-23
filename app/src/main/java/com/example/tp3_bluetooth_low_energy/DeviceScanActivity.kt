@@ -253,10 +253,12 @@ class DeviceScanActivity : AppCompatActivity() {
                 /*
                  * TODO: Ajouter l'appareil découvert à la liste des appareils
                  */
+                bleDevicesFoundList.add(device)
                 /*
                  * TODO: Mettre à jour l'affichage du RecyclerView (remplacer le recyclerViewID)
-		 * binding.recyclerViewID.adapter?.notifyItemInserted(bleDevicesFoundList.size - 1)
+		         * binding.recyclerViewID.adapter?.notifyItemInserted(bleDevicesFoundList.size - 1)
                  */
+                binding.recyclerView.adapter?.notifyItemInserted(bleDevicesFoundList.size - 1)
             }
         }
     }
