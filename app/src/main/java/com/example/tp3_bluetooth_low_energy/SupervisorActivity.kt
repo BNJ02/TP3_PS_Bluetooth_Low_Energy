@@ -19,6 +19,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.tp3_bluetooth_low_energy.databinding.ActivitySupervisorBinding
+import com.jjoe64.graphview.series.DataPoint
+import com.jjoe64.graphview.series.LineGraphSeries
 import java.math.BigInteger
 import java.util.UUID
 
@@ -28,10 +30,9 @@ class SupervisorActivity : AppCompatActivity() {
      * TODO: private lateinit var binding : ...
      */
     private lateinit var binding: ActivitySupervisorBinding
-    private lateinit var bluetoothGatt: BluetoothGatt
+    private lateinit var temperatureSeries: LineGraphSeries<DataPoint>
+    private lateinit var humiditySeries: LineGraphSeries<DataPoint>
 
-    //private lateinit var randomCharacteristic: BluetoothGattCharacteristic
-    //private lateinit var ambientCharacteristic: BluetoothGattCharacteristic
     /**
      * Méthode appelée à la création de l'activité
      */
@@ -42,6 +43,22 @@ class SupervisorActivity : AppCompatActivity() {
          */
         binding = ActivitySupervisorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Création des séries
+        temperatureSeries = LineGraphSeries<DataPoint>()
+        humiditySeries = LineGraphSeries<DataPoint>()
+
+        // Liaison des séries aux GraphView
+        binding.temperatureGraph.addSeries(temperatureSeries)
+        binding.humidityGraph.addSeries(humiditySeries)
+
+        // Configuration des GraphView
+        binding.temperatureGraph.viewport.setYAxisBoundsManual(true)
+        binding.temperatureGraph.viewport.setMinY(0.0)
+        binding.temperatureGraph.viewport.setMaxY(40.0)
+        binding.humidityGraph.viewport.setYAxisBoundsManual(true)
+        binding.humidityGraph.viewport.setMinY(30.0)
+        binding.humidityGraph.viewport.setMaxY(80.0)
         /*
          * TODO: Récupérer le BluetoothDevice transmis par l'activité précédente
          *  Puis l'envoyer à la fonction connectToDevice()
@@ -70,8 +87,6 @@ class SupervisorActivity : AppCompatActivity() {
          */
         val SERVICE_LED_UUID: UUID = UUID.fromString("00000000-0002-11e1-9ab4-0002a5d5c51b")
         val CHARACTERISTIC_LED_UUID: UUID = UUID.fromString("00000100-0001-11e1-ac36-0002a5d5c51b")
-
-        var DESCRIPTOR_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
         val SERVICE_NOTIFY_UUID: UUID = UUID.fromString("00000000-0001-11e1-9ab4-0002a5d5c51b")
         val CHARACTERISTIC_RANDOM_UUID: UUID = UUID.fromString("00e00000-0001-11e1-ac36-0002a5d5c51b")
@@ -182,13 +197,13 @@ class SupervisorActivity : AppCompatActivity() {
             val service = currentBluetoothGatt?.getService(SERVICE_LED_UUID)
             if(service != null) {
                 // Création de la séquence d'octets pour changer l'état de la LED
-                val charac2 = service.getCharacteristic(CHARACTERISTIC_LED_UUID)
+                val charac = service.getCharacteristic(CHARACTERISTIC_LED_UUID)
                 if (ledState) {
-                    charac2.value = byteArrayOf(0xde.toByte(), 0xad.toByte())
+                    charac.value = byteArrayOf(0xde.toByte(), 0xad.toByte())
                 } else {
-                    charac2.value = byteArrayOf(0xca.toByte(), 0xfe.toByte())
+                    charac.value = byteArrayOf(0xca.toByte(), 0xfe.toByte())
                 }
-                currentBluetoothGatt?.writeCharacteristic(charac2)
+                currentBluetoothGatt?.writeCharacteristic(charac)
 
                 // Mise à jour de l'état de la LED dans l'interface utilisateur
                 ledState = !ledState
@@ -254,6 +269,20 @@ class SupervisorActivity : AppCompatActivity() {
         val humidity = BigInteger(humidityBytes).toInt() / 100.0
         val temperature = BigInteger(temperatureBytes).toInt() / 10.0
 
+        val lastXValueTemperature = temperatureSeries.getHighestValueX()
+        val newDataPointTemperature = DataPoint(lastXValueTemperature + 1, temperature.toDouble())
+
+        val lastXValueHumidity = humiditySeries.getHighestValueX()
+        val newDataPointHumidity = DataPoint(lastXValueHumidity + 1, humidity.toDouble())
+
+        // Ajout des nouveaux points aux séries
+        temperatureSeries.appendData(newDataPointTemperature, true, 8)
+        humiditySeries.appendData(newDataPointHumidity, true, 8)
+
+        // Mise à jour de l'affichage des GraphView
+        binding.temperatureGraph.onDataChanged(true, true)
+        binding.humidityGraph.onDataChanged(true, true)
+
         // Mettre à jour les TextView de l'interface
         runOnUiThread {
             val timestampTextView = findViewById<TextView>(R.id.timestamp)
@@ -265,7 +294,6 @@ class SupervisorActivity : AppCompatActivity() {
             temperatureTextView.text = "Temperature: $temperature°C"
         }
     }
-
 
     /**
      * Méthode appelée à la destruction de l'activité
