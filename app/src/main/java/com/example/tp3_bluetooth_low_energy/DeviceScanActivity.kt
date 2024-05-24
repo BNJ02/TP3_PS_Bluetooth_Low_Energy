@@ -65,24 +65,27 @@ class DeviceScanActivity : AppCompatActivity() {
     /**
      * Méthode appelée lorsque l'activité repasse complètement au premier plan
      */
+    private var permissionsAccepted = true
     override fun onResume() {
         super.onResume()
-
-        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            // Test si l'appareil est compatible BLE, si ça n'est pas le cas : finish()
-            Toast.makeText(this, "Appareil non compatible BLE", Toast.LENGTH_SHORT).show()
-            finish()
-        } else if(!hasPermission()) {
-            // Test si on a les permissions
-            // Si non, on demande les demande à l'utilisateur
-            askForPermission()
-        } else if (!locationServiceEnabled()) {
-            // Test si la localisation est activée
-            // Sinon on ouvre les parametres pour demander d'activer la localisation
-            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-        } else {
-            // La méthode setupBLE() va initialiser le BluetoothAdapter et lancera le scan
-            setupBLE()
+        if (permissionsAccepted) {
+            permissionsAccepted = false
+            if (!packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                // Test si l'appareil est compatible BLE, si ça n'est pas le cas : finish()
+                Toast.makeText(this, "Appareil non compatible BLE", Toast.LENGTH_SHORT).show()
+                finish()
+            } else if(!hasPermission()) {
+                // Test si on a les permissions
+                // Si non, on demande les demande à l'utilisateur
+                askForPermission()
+            } else if (!locationServiceEnabled()) {
+                // Test si la localisation est activée
+                // Sinon on ouvre les parametres pour demander d'activer la localisation
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            } else {
+                // La méthode setupBLE() va initialiser le BluetoothAdapter et lancera le scan
+                setupBLE()
+            }
         }
     }
 
@@ -133,6 +136,7 @@ class DeviceScanActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN), PERMISSION_REQUEST_LOCATION
             )
         }
+
     }
 
     /**
